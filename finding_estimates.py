@@ -132,55 +132,61 @@ class EstimatorClass:
             evals[i] = self.evaluations[i](rho,rho_estimate)
         return evals
 
-n_samples = 1000
-n = 3
-estimator_class = EstimatorClass()
-j_postr = Posterior("arcsine")
-rhos = np.linspace(0,0.9,100)
-print(rhos)
+if __name__ == "__main__":
 
-final_evaluates = {}
+    n_samples = 10000
+    n = 3
+    estimator_class = EstimatorClass()
+    j_postr = Posterior("jeffrey")
+    rhos = np.linspace(0,0.9,10)
+    print(rhos)
 
-for rho in rhos:
-    print("rho",rho)
-    estimates = np.empty((n_samples,estimator_class.n_estimators))
-    evaluations = np.empty((n_samples,estimator_class.n_estimators,estimator_class.n_evaluators))
-    for i in range(n_samples):
-        if i%100 == 0:
-            print(i)
+    final_evaluates = {}
 
-        estimators, names = estimator_class.get_all_estimators(j_postr,n,rho)
-        evaluators = estimator_class.fully_evaluate_estimate(rho,estimators)
-        estimates[i,:] = estimators
-        evaluations[i,:] = evaluators
+    for rho in rhos:
+        print("rho",rho)
+        estimates = np.empty((n_samples,estimator_class.n_estimators))
+        evaluations = np.empty((n_samples,estimator_class.n_estimators,estimator_class.n_evaluators))
+        for i in range(n_samples):
+            if i%100 == 0:
+                print(i)
 
-    final_evaluates[rho] = (np.mean(evaluators,axis=0),np.mean(evaluations,axis=0))
-    mean_evaluations = np.mean(evaluations,axis=0)
-    eval_table = np.hstack((np.transpose([estimator_class.est_names]),mean_evaluations))
-    eval_table = np.vstack((np.hstack(([[0]],[estimator_class.eval_names])),eval_table))
-#    print(eval_table)
+            estimators, names = estimator_class.get_all_estimators(j_postr,n,rho)
+            evaluators = estimator_class.fully_evaluate_estimate(rho,estimators)
+            estimates[i,:] = estimators
+            evaluations[i,:] = evaluators
 
-#    plt.figure(1)
-#    for i in range(len(estimates[0])):
-#        plt.plot(estimates[:,i],"o",label=estimator_class.est_names[i])
-#    plt.legend()
-#    plt.show()
+        final_evaluates[rho] = (np.mean(evaluators,axis=0),np.mean(evaluations,axis=0))
+        mean_evaluations = np.mean(evaluations,axis=0)
+        eval_table = np.hstack((np.transpose([estimator_class.est_names]),mean_evaluations))
+        eval_table = np.vstack((np.hstack(([[0]],[estimator_class.eval_names])),eval_table))
+    #    print(eval_table)
 
-#    plt.figure(2)
-#    for i in range(estimator_class.n_estimators):
-#        plt.plot(estimator_class.eval_names,mean_evaluations[i,:],label=estimator_class.est_names[i])
-#    plt.legend()
-#    plt.show()
+    #    plt.figure(1)
+    #    for i in range(len(estimates[0])):
+    #        plt.plot(estimates[:,i],"o",label=estimator_class.est_names[i])
+    #    plt.legend()
+    #    plt.show()
 
-print(final_evaluates)
+    #    plt.figure(2)
+    #    for i in range(estimator_class.n_estimators):
+    #        plt.plot(estimator_class.eval_names,mean_evaluations[i,:],label=estimator_class.est_names[i])
+    #    plt.legend()
+    #    plt.show()
 
-plt.figure()
-for i in range(estimator_class.n_evaluators):
-    plt.subplot(estimator_class.n_evaluators,1,i+1)
-    plt.title(estimator_class.eval_names[i])
-    for j in range(estimator_class.n_estimators):
-        dataset = np.array([final_evaluates[rho][1][j,i] for rho in rhos])
-        plt.plot(rhos,dataset,label=estimator_class.est_names[j])
-        plt.legend()
-plt.show()
+    print(final_evaluates)
+
+    import pickle
+
+    pickle.dump(final_evaluates, open("jeffrey.p","wb"))
+
+    plt.figure()
+    for i in range(estimator_class.n_evaluators):
+        plt.subplot(estimator_class.n_evaluators,1,i+1)
+        plt.title(estimator_class.eval_names[i])
+        for j in range(estimator_class.n_estimators):
+            dataset = np.array([final_evaluates[rho][1][j,i] for rho in rhos])
+            plt.plot(rhos,dataset,label=estimator_class.est_names[j])
+            plt.legend()
+    plt.show()
 

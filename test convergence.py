@@ -1,18 +1,29 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import integrate
 
 def jeffreys(rho,T1,T2,n):
     temp = 1-rho**2
     return np.sqrt(1+rho**2)/((2*np.pi)**n*temp**(n/2+1))*np.exp(-T1/(2*temp)+rho*T2/temp)
+
+def lnjeffreys(rho,T1,T2,n):
+    temp = 1-rho**2
+    return 1/2*np.log(1+rho**2)-n*np.log(2*np.pi)-(n/2+1)*np.log(temp)-T1/(2*temp)+rho*T2/temp
 
 def PC(lam, rho, T1, T2, n):
     temp = 1-rho**2
     return lam*np.abs(rho)/(temp**(n/2+1)*np.sqrt(-np.log(temp)))*\
            np.exp(-T1/(2*temp)+rho*T2/temp-lam*np.sqrt(-np.log(temp)))
 
+def lnPC(lam, rho, T1, T2, n):
+    temp = 1-rho**2
+    return np.log(lam)+np.log(np.abs(rho))-(n/2+1)*np.log(temp)-1/2*np.log(-np.log(temp))\
+           -T1/(2*temp)+rho*T2/temp-lam*np.sqrt(-np.log(temp))
+
 def ratio(lam, rho):
     temp = np.sqrt(-np.log(1-rho**2))
     return lam*np.abs(rho)/(temp*np.sqrt(1+rho**2))*np.exp(-lam*temp)
+
 
 n = 100
 
@@ -27,14 +38,24 @@ T2 = np.sum(data[:,0]*data[:,1])
 print("T1",T1)
 print("T2",T2)
 
+print(T1,T2,n)
+print(integrate.quad(lambda x: jeffreys(x,T1,T2,n),-0.9,0.9))
+
 rho_data = np.linspace(-0.99,0.99,10000)
 
-jeffrey_post = jeffreys(rho_data,T1,T2,n)
-PC_posts = [PC(lam,rho_data,T1,T2,n) for lam in lams]
+jeffrey_post = np.exp(lnjeffreys(rho_data,T1,T2,n))
+PC_posts = [np.exp(lnPC(lam,rho_data,T1,T2,n)) for lam in lams]
 
-jeffrey_post /= np.sum(jeffrey_post)*1/10000
-for posterior in PC_posts:
-    posterior /= np.sum(posterior)*1/10000
+
+#jeffrey_post /= 1/np.max(jeffrey_post)
+#for posterior in PC_posts:
+#    posterior /= np.max(posterior)
+
+#jeffrey_post /= np.sum(jeffrey_post)*1/10000
+#for posterior in PC_posts:
+#    posterior /= np.sum(posterior)*1/10000
+
+#1/0
 
 #post_ratio = ratio(lam,rho_data)
 
