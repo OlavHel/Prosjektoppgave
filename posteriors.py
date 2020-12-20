@@ -87,24 +87,35 @@ class Posterior:
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+    from finding_estimates import EstimatorClass
+
+    est_class = EstimatorClass()
 
     n = 3
-    rho = 0.0
-    S1 = np.random.gamma(n/2,4*(1+rho))#2*n*(1+rho)
-    S2 = np.random.gamma(n/2,4*(1-rho))#2*n*(1-rho)
+    rho = 0.9
+    S1 = 2*n*(1+rho)#np.random.gamma(n/2,4*(1+rho))#
+    S2 = 2*n*(1-rho)#np.random.gamma(n/2,4*(1-rho))#
 
-    T1 = 1/2*(S1+S2)
-    T2 = 1/4*(S1-S2)
+    Xs = np.array([0.2, -0.39, -1.95])
+    Ys = np.array([1.08, 0.35, -0.4])
+
+    T1 = np.sum(Xs**2+Ys**2)
+    T2 = np.sum(Xs*Ys)
+
+    S1 = T1+2*T2
+    S2 = T1-2*T2
+
+    print(S1,S2)
+
+    mle = est_class.mle(Xs,Ys,n)
 
     jeff = Posterior("jeffrey")
-    PC1 = Posterior("PC",lam=1)
-    PC01 = Posterior("PC",lam=0.1)
-    PC0001 = Posterior("PC",lam=10**(-3))
+    PC = Posterior("PC",lam=10**(-4))
     unif = Posterior("uniform")
     arcs = Posterior("arcsine")
 
-    distrs = [jeff,PC1,PC01,PC0001,unif,arcs]
-    labels = ["Jeffreys",r"PC, $\lambda$=1",r"PC, $\lambda$=0.1",r"PC, $\lambda$=0.001","uniform","arcsine"]
+    distrs = [jeff,PC,unif,arcs]
+    labels = ["Jeffreys","PC, $\lambda=10^{-4}$","uniform","arcsine"]
 
     rhos = np.linspace(-1+1/500,1-1/500,1000)
 
@@ -113,6 +124,7 @@ if __name__ == "__main__":
     for i in range(len(distrs)):
         distr = distrs[i]
         plt.plot(rhos,distr.norm_distribution(rhos,n,T1,T2),label=labels[i])
+    plt.plot([mle,mle],[0,np.max([d.norm_distribution(mle,n,T1,T2) for d in distrs])],label="MLE")
     plt.legend()
     plt.show()
 
